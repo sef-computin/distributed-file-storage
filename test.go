@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/sef-comp/distrfs/p2p"
 )
 
 func main(){
-  Test1()
+  Test2()
 }
 
 func OnPeer(peer p2p.Peer) error{
@@ -42,6 +43,38 @@ func Test1(){
   select{}
 
   // fmt.Println("AGAZEGA!")
+
+
+}
+
+
+func Test2(){
+  tcptransportOpts := p2p.TCPTransportOpts{
+    ListenAddr: ":3000",
+    ShakeHands: p2p.NOPHandshakeFunc,
+    Decoder: p2p.DefaultDecoder{},
+    // OnPeer: func(p2p.Peer) error,
+  }
+
+  tcptransport := p2p.NewTCPTransport(tcptransportOpts)
+
+  fileServerOpts := FileServerOpts{
+    StorageRoot: "3000_network",
+    PathTransformFunc: CASPathTransformFunc,
+    Transport: tcptransport,
+    BootstrapNodes: []string{":4000"},
+  }
+
+  s := NewFileServer(fileServerOpts)
+ 
+  go func(){
+    time.Sleep(time.Second * 3)
+    s.Stop()
+  }()
+ 
+  if err := s.Start(); err != nil{
+    log.Fatal(err)
+  }
 
 
 }

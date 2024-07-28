@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+
 func TestPathTransformFunc(t *testing.T) {
 	key := "momsbestpicture"
 	pathname := CASPathTransformFunc(key)
@@ -43,36 +44,54 @@ func TestStoreDeleteKey(t *testing.T) {
 }
 
 func TestStore(t *testing.T) {
-	opts := StoreOpts{
-		PathTransformFunc: CASPathTransformFunc,
-	}
+  count := 50
+  s := newStore()
+  defer teardown(t, s)
 
-	s := NewStore(opts)
-	key := "momsspecials"
+	// key := "foobar"
+  for i:= 0; i<count; i++{
+    key := fmt.Sprintf("foo_%d", i)
+	  data := []byte("some jpeg bytes")
+  	if err := s.writeStream(key, bytes.NewBuffer(data)); err != nil {
+	  	t.Error(err)
+	  }
 
-	data := []byte("some jpeg bytes")
+	  if ok := s.Has(key); !ok{
+		  t.Errorf("Expected to have key %s", key)
+  	}
 
-	if err := s.writeStream(key, bytes.NewBuffer(data)); err != nil {
-		t.Error(err)
-	}
+	  r, err := s.Read(key)
+	  if err != nil {
+		  t.Error(err)
+	  }
 
-	if ok := s.Has(key); !ok{
-		t.Errorf("Expected to have key %s", key)
-	}
+	  b, err := ioutil.ReadAll(r)
 
-	r, err := s.Read(key)
-	if err != nil {
-		t.Error(err)
-	}
+	  fmt.Println(string(b))
 
-	b, err := ioutil.ReadAll(r)
-
-	fmt.Println(string(b))
-
-	if string(b) != string(data) {
-		t.Errorf("want %s, have %s", data, b)
-	}
+	  if string(b) != string(data) {
+		  t.Errorf("want %s, have %s", data, b)
+  	}
 	// fmt.Println(string(b))
 
-	s.Delete(key)
+    if err := s.Delete(key); err != nil{
+      t.Error(err)
+    }
+    if ok := s.Has(key); ok{
+      t.Errorf("expected not to have key %s", key)
+    }
+  }
+}
+
+func newStore() *Store{
+  opts := StoreOpts{
+    PathTransformFunc: CASPathTransformFunc,
+  }
+  return NewStore(opts)
+}
+
+func teardown(t *testing.T, s *Store){
+  if err := s.Clear(); err != nil{
+    t.Error(err)
+  }
 }
