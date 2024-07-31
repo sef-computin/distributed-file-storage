@@ -23,6 +23,15 @@ func NewTCPPeer(conn net.Conn, outbound bool) *TCPPeer {
 	}
 }
 
+func (p *TCPPeer) Send(b []byte) error {
+	_, err := p.conn.Write(b)
+	return err
+}
+
+func (p *TCPPeer) RemoteAddr() net.Addr {
+	return p.conn.RemoteAddr()
+}
+
 func (p *TCPPeer) Close() error {
 	return p.conn.Close()
 }
@@ -64,31 +73,31 @@ func (t *TCPTransport) ListenAndAccept() error {
 
 	go t.startAcceptLoop()
 
-  log.Printf("TCP transport listening on port: %s\n", t.ListenAddr)
+	log.Printf("TCP transport listening on port: %s\n", t.ListenAddr)
 	return nil
 }
 
-func (t *TCPTransport) Close() error{
-  return t.listener.Close()
+func (t *TCPTransport) Close() error {
+	return t.listener.Close()
 }
 
-func (t *TCPTransport) Dial(addr string) error{
-  conn, err := net.Dial("tcp", addr)
-  if err != nil{
-    return err
-  }
+func (t *TCPTransport) Dial(addr string) error {
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return err
+	}
 
-  go t.handleConn(conn, true)
+	go t.handleConn(conn, true)
 
-  return nil
+	return nil
 }
 
 func (t *TCPTransport) startAcceptLoop() {
 	for {
 		conn, err := t.listener.Accept()
-    if errors.Is(err, net.ErrClosed){
-      return
-    }
+		if errors.Is(err, net.ErrClosed) {
+			return
+		}
 		if err != nil {
 			fmt.Printf("TCP accept error %s\n:", err)
 		}
