@@ -9,7 +9,7 @@ import (
 )
 
 type TCPPeer struct {
-	conn net.Conn
+	net.Conn
 
 	// if we dial, outbound = true
 	// if we accept, outbound = false
@@ -18,23 +18,17 @@ type TCPPeer struct {
 
 func NewTCPPeer(conn net.Conn, outbound bool) *TCPPeer {
 	return &TCPPeer{
-		conn:     conn,
+		Conn:     conn,
 		outbound: outbound,
 	}
 }
 
 func (p *TCPPeer) Send(b []byte) error {
-	_, err := p.conn.Write(b)
+  fmt.Println("sending ", b)
+	_, err := p.Conn.Write(b)
 	return err
 }
 
-func (p *TCPPeer) RemoteAddr() net.Addr {
-	return p.conn.RemoteAddr()
-}
-
-func (p *TCPPeer) Close() error {
-	return p.conn.Close()
-}
 
 type TCPTransportOpts struct {
 	ListenAddr string
@@ -58,6 +52,10 @@ func NewTCPTransport(opts TCPTransportOpts) *TCPTransport {
 		rpcch:            make(chan RPC),
 	}
 }
+
+// func(t *TCPTransport) ListenAddr() string{
+//   return t.lis
+// }
 
 func (t *TCPTransport) Consume() <-chan RPC {
 	return t.rpcch

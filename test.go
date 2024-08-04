@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/sef-comp/distrfs/p2p"
 )
@@ -29,17 +31,17 @@ func makeServer(listenAddr string, nodes ...string) *FileServer {
 		BootstrapNodes:    nodes,
 	}
 
-  s := NewFileServer(fileServerOpts)
-  tcptransport.OnPeer = s.OnPeer
+	s := NewFileServer(fileServerOpts)
+	tcptransport.OnPeer = s.OnPeer
 
-  return s
+	return s
 }
 
-func OnPeer(peer p2p.Peer) error {
-	fmt.Println("Doing onpeer logic")
-	peer.Close()
-	return nil
-}
+// func OnPeer(peer p2p.Peer) error {
+// 	fmt.Println("Doing onpeer logic")
+// 	peer.Close()
+// 	return nil
+// }
 
 func Test1() {
 
@@ -76,6 +78,18 @@ func Test2() {
 		log.Fatal(s1.Start())
 	}()
 
-	s2.Start()
+
+  time.Sleep(1 * time.Second)
+	
+  go s2.Start()
+
+  time.Sleep(1 * time.Second)
+
+	data := bytes.NewReader([]byte("my big data file here!"))
+
+	s2.StoreData("myprivatekey", data)
+
+  select{}
+
 
 }

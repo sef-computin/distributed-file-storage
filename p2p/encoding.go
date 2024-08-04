@@ -13,7 +13,7 @@ type GOBDecoder struct{
 }
 
 func (dec GOBDecoder) Decode(r io.Reader, rpc *RPC) error{
-  return gob.NewDecoder(r).Decode(rpc.Payload)
+  return gob.NewDecoder(r).Decode(rpc)
 }
 
 type DefaultDecoder struct{}
