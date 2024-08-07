@@ -14,17 +14,20 @@ type TCPPeer struct {
 	// if we dial, outbound = true
 	// if we accept, outbound = false
 	outbound bool
+
+  Wg *sync.WaitGroup
 }
 
 func NewTCPPeer(conn net.Conn, outbound bool) *TCPPeer {
 	return &TCPPeer{
 		Conn:     conn,
 		outbound: outbound,
+    Wg:       &sync.WaitGroup{},
 	}
 }
 
 func (p *TCPPeer) Send(b []byte) error {
-  fmt.Println("sending ", b)
+  // fmt.Println("sending ", b)
 	_, err := p.Conn.Write(b)
 	return err
 }
@@ -100,7 +103,7 @@ func (t *TCPTransport) startAcceptLoop() {
 			fmt.Printf("TCP accept error %s\n:", err)
 		}
 
-		fmt.Printf("new incoming connection %+v\n", conn)
+		// fmt.Printf("new incoming connection %+v\n", conn)
 		go t.handleConn(conn, false)
 	}
 }
@@ -133,17 +136,18 @@ func (t *TCPTransport) handleConn(conn net.Conn, outbound bool) {
 
 	for {
 		err = t.Decoder.Decode(conn, &rpc)
-		if err == net.ErrClosed {
-			return
-		}
-
 		if err != nil {
 			// fmt.Printf("TCP read error: %v\n", err)
 			return
 		}
 
-		rpc.From = conn.RemoteAddr()
+		rpc.From = conn.RemoteAddr().String()
+    peer.Wg.Add(1)
+    fmt.Println("waiting till stream is done")
 		t.rpcch <- rpc
+    peer.Wg.Wait()
+    fmt.Println("stream done continueing normal read loop")
+
 		// fmt.Printf("message: %+v\n", rpc)
 	}
 
