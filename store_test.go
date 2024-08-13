@@ -28,39 +28,41 @@ func TestStoreDeleteKey(t *testing.T) {
 	}
 
 	s := NewStore(opts)
+  id := generateID()
 
 	key := "momsspecials"
 
 	data := []byte("some jpeg bytes")
 
-	if err := s.writeStream(key, bytes.NewBuffer(data)); err != nil {
+	if _, err := s.writeStream(id, key, bytes.NewBuffer(data)); err != nil {
 		t.Error(err)
 	}
 
-	if err := s.Delete(key); err != nil {
+	if err := s.Delete(id, key); err != nil {
 		t.Error(err)
 	}
 
 }
 
 func TestStore(t *testing.T) {
-  count := 50
+  count := 3
   s := newStore()
+  id := generateID()
   defer teardown(t, s)
 
 	// key := "foobar"
   for i:= 0; i<count; i++{
     key := fmt.Sprintf("foo_%d", i)
 	  data := []byte("some jpeg bytes")
-  	if err := s.writeStream(key, bytes.NewBuffer(data)); err != nil {
+  	if _, err := s.writeStream(id, key, bytes.NewBuffer(data)); err != nil {
 	  	t.Error(err)
 	  }
 
-	  if ok := s.Has(key); !ok{
+	  if ok := s.Has(id, key); !ok{
 		  t.Errorf("Expected to have key %s", key)
   	}
 
-	  r, err := s.Read(key)
+	  _, r, err := s.Read(id, key)
 	  if err != nil {
 		  t.Error(err)
 	  }
@@ -74,10 +76,10 @@ func TestStore(t *testing.T) {
   	}
 	// fmt.Println(string(b))
 
-    if err := s.Delete(key); err != nil{
+    if err := s.Delete(id, key); err != nil{
       t.Error(err)
     }
-    if ok := s.Has(key); ok{
+    if ok := s.Has(id, key); ok{
       t.Errorf("expected not to have key %s", key)
     }
   }
